@@ -11,6 +11,7 @@ class AssetHandlerTest < Test::Unit::TestCase
     FileUtils.mkdir(fixture_path)
     FileUtils.mkdir(original_media_dir)
     FileUtils.mkdir(assets_dir)
+    FileUtils.mkdir(secret_dir)
   end
 
   def teardown
@@ -29,8 +30,12 @@ class AssetHandlerTest < Test::Unit::TestCase
     fixture_path + "/assets"
   end
 
+  def secret_dir
+    fixture_path + "/secrets"
+  end
+
   def app
-    AssetHandler.new(original_media_dir, assets_dir)
+    AssetHandler.new(original_media_dir, fixture_path)
   end
 
   def create_asset(contents, filename="existing_file.txt", destination_folder=assets_dir)
@@ -44,7 +49,7 @@ class AssetHandlerTest < Test::Unit::TestCase
     asset_file = create_asset("returning a file")
     get "/assets/#{asset_file}"
 
-    assert_equal last_response.body, "returning a file"
+    assert_equal "returning a file", last_response.body
   end
 
   def test_requesting_asset_that_does_not_exist_in_the_assets_directory_returns_a_404
@@ -61,7 +66,20 @@ class AssetHandlerTest < Test::Unit::TestCase
     assert !File.exists?(original_file_path)
     assert File.exists?(File.join(assets_dir, filename))
 
-    assert_equal last_response.body, "/assets/#{filename}"
+    assert_equal "/assets/#{filename}", last_response.body
   end
 
+  def test_requesting_asset_outside_media_folder_returns_a_404
+    create_asset "secret-content", "secrets.txt", secret_dir
+    get secret_dir + "/secrets.txt"
+
+    assert last_response.not_found?
+  end
+
+  def test_requesting_asset_outside_media_folder_using_relative_paths_returns_a_404
+    create_asset "secret-content", "secrets.txt", secret_dir
+    get original_media_dir + "/../secrets/secrets.txt"
+
+    assert last_response.not_found?
+  end
 end

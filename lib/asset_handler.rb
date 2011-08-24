@@ -1,24 +1,24 @@
 require 'rack/file'
 
 class AssetHandler
-  def initialize(original_media_location, assets_location)
+  def initialize(original_media_location, app_location)
     @original_media_dir = original_media_location
-    @asset_dir = assets_location
-    @files = Rack::File.new(Dir.new(@asset_dir))
+    @asset_dir_name = "assets"
+    @asset_dir = File.join(app_location, @asset_dir_name)
+    @files = Rack::File.new(Dir.new(app_location))
   end
 
   def call(env)
     request = Rack::Request.new(env)
-    path = request.path_info
 
-    if path =~ /assets/
-      env["PATH_INFO"] = path.gsub("/assets", "")
+    if request.path_info =~ /^\/#{@asset_dir_name}\//
       @files.call(env)
     else
-      if path =~ /#{@original_media_dir}/ && File.exists?(path)
+      path = File.expand_path(request.path_info)
+      if path =~ /^#{@original_media_dir}/ && File.exists?(path)
         FileUtils.mv(path, @asset_dir)
-        filename = File.basename(path)
-        [200, {"Content-Type" => "text/html"}, "/assets/#{filename}"]
+        new_asset_location = File.join("/", @asset_dir_name, File.basename(path))
+        [200, {"Content-Type" => "text/html"}, new_asset_location]
       else
         [404, {"Content-Type" => "text/html"}, "File not found"]
       end
