@@ -17,7 +17,7 @@ class AssetHandler
       path = File.expand_path(request.path_info)
       if path =~ /^#{@original_media_dir}/ && File.exists?(path)
         FileUtils.mv(path, @asset_dir)
-        new_asset_location = File.join("/", @asset_dir_name, File.basename(path))
+        new_asset_location = request.base_url + File.join("/", @asset_dir_name, File.basename(path))
         [200, {"Content-Type" => "text/html"}, new_asset_location]
       else
         [404, {"Content-Type" => "text/html"}, "File not found"]

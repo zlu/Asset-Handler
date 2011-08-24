@@ -66,7 +66,7 @@ class AssetHandlerTest < Test::Unit::TestCase
     assert !File.exists?(original_file_path)
     assert File.exists?(File.join(assets_dir, filename))
 
-    assert_equal "/assets/#{filename}", last_response.body
+    assert_equal "http://example.org/assets/#{filename}", last_response.body
   end
 
   def test_requesting_asset_outside_media_folder_returns_a_404
