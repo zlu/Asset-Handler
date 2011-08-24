@@ -58,13 +58,13 @@ class AssetHandlerTest < Test::Unit::TestCase
     assert last_response.not_found?
   end
 
-  def test_requesting_asset_in_the_original_media_folder_moves_the_file_and_returns_new_location
+  def test_requesting_asset_in_the_original_media_folder_copies_the_file_and_returns_new_location
     filename = create_asset("original content", "original-content-file.txt", original_media_dir)
     original_file_path = "#{original_media_dir}/#{filename}"
     get original_file_path
 
-    assert !File.exists?(original_file_path)
-    assert File.exists?(File.join(assets_dir, filename))
+    assert_equal "original content", File.read(original_file_path)
+    assert_equal "original content", File.read(File.join(assets_dir, filename))
 
     assert_equal "http://example.org/assets/#{filename}", last_response.body
   end
